@@ -4,7 +4,7 @@
 
 ## Why
 
-`serde` lets you skip serialization with `skip_serializing_if = "Type::is_default__field"`, but you have to write that helper yourself for every field, and it has to compare against the _actual_ `Default::default()` value of the type.
+`serde` lets you skip serialization with `skip_serializing_if = ...`, but you have to write that helper yourself for every field, and it has to compare against the _actual_ `Default::default()` value of the type.
 
 `smart-is-default` generates those helpers for you. It works best alongside [`smart-default`](https://crates.io/crates/smart-default), which is what produces the custom `Default::default()` in the first place. Together they form a one-liner: a default-bearing struct serializes to `{}` when fully default, and emits only the fields that actually differ from default.
 
@@ -57,5 +57,8 @@ impl Item {
 | ------------------------------------ | :---------------: |
 | Named fields (`struct Foo { x: T }`) |        yes        |
 | Tuple structs (`struct Foo(T, U)`)   |   yes (indices)   |
+| Generics                             |     limited\*     |
 | Unit structs                         | `is_default` only |
 | Enums                                | `is_default` only |
+
+_\*Generics are supported when the required Default/PartialEq bounds are declared by the type._
