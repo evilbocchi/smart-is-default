@@ -1,7 +1,13 @@
 [package]
 name = "smart-is-default"
+description = "A proc-macro that generates `is_default` helpers."
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+authors = ["evilbocchi"]
+repository = "https://github.com/evilbocchi/smart-is-default"
+readme = "../README.md"
+keywords = ["default"]
 
 [lib]
 proc-macro = true
