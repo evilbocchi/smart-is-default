@@ -10,7 +10,7 @@
 
 ## What it does
 
-Given a struct, `#[derive(SmartIsDefault)]` emits one associated function per named field:
+Given a named-field struct, `#[derive(SmartIsDefault)]` emits one associated function per field:
 
 ```rust
 #[derive(SmartIsDefault)]
@@ -53,21 +53,9 @@ impl Item {
 
 ## Supported types
 
-| Struct shape                         | Support |
-| ------------------------------------ | :-----: |
-| Named fields (`struct Foo { x: T }`) |   yes   |
-| Tuple structs (`struct Foo(T, U)`)   |   no    |
-| Unit structs                         |   no    |
-| Enums (variants)                     |   no    |
-
-For generic structs the helpers are emitted inside a `impl<T: ...>` block, so the same `Pair<T>::is_default__first` works for any `T` whose default is comparable:
-
-```rust
-#[derive(SmartDefault, SmartIsDefault, Serialize, Deserialize)]
-struct Pair<T: Default + PartialEq> {
-    #[default(T::default())]
-    #[serde(skip_serializing_if = "Pair::is_default__first", default)]
-    first: T,
-    // …
-}
-```
+| Type shape                           |      Support      |
+| ------------------------------------ | :---------------: |
+| Named fields (`struct Foo { x: T }`) |        yes        |
+| Tuple structs (`struct Foo(T, U)`)   |   yes (indices)   |
+| Unit structs                         | `is_default` only |
+| Enums                                | `is_default` only |

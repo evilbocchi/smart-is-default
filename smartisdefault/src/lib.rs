@@ -1,7 +1,7 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, Index};
 
 #[proc_macro_derive(SmartIsDefault, attributes(default, smart_is_default))]
 pub fn derive_smart_is_default(input: TokenStream) -> TokenStream {
@@ -14,28 +14,51 @@ pub fn derive_smart_is_default(input: TokenStream) -> TokenStream {
 
     let mut helper_fns = Vec::new();
 
-    if let Data::Struct(data) = input.data {
-        if let Fields::Named(fields) = data.fields {
-            for field in fields.named {
-                let field_name = field.ident.as_ref().unwrap();
+    match input.data {
+        Data::Struct(data) => match data.fields {
+            Fields::Named(fields) => {
+                for field in fields.named {
+                    let field_name = field.ident.as_ref().unwrap();
 
-                // Per-field opt-out: `#[smart_is_default(skip)]` suppresses the
-                // `is_default__<field>` helper for this field only.
-                if field_has_flag(&field, "smart_is_default", "skip") {
-                    continue;
-                }
-
-                let field_ty = &field.ty;
-                let fn_name = format_ident!("is_default__{}", field_name);
-
-                helper_fns.push(quote! {
-                    #[allow(non_snake_case)]
-                    fn #fn_name(v: &#field_ty) -> bool {
-                        v == &Self::default().#field_name
+                    // Per-field opt-out: `#[smart_is_default(skip)]` suppresses the
+                    // `is_default__<field>` helper for this field only.
+                    if field_has_flag(&field, "smart_is_default", "skip") {
+                        continue;
                     }
-                });
+
+                    let field_ty = &field.ty;
+                    let fn_name = format_ident!("is_default__{}", field_name);
+
+                    helper_fns.push(quote! {
+                        #[allow(non_snake_case)]
+                        fn #fn_name(v: &#field_ty) -> bool {
+                            v == &Self::default().#field_name
+                        }
+                    });
+                }
             }
-        }
+            Fields::Unnamed(fields) => {
+                for (field_index, field) in fields.unnamed.into_iter().enumerate() {
+                    if field_has_flag(&field, "smart_is_default", "skip") {
+                        continue;
+                    }
+
+                    let field_ty = &field.ty;
+                    let index = Index::from(field_index);
+                    let fn_name = format_ident!("is_default__{}", field_index);
+
+                    helper_fns.push(quote! {
+                        #[allow(non_snake_case)]
+                        fn #fn_name(v: &#field_ty) -> bool {
+                            v == &Self::default().#index
+                        }
+                    });
+                }
+            }
+            Fields::Unit => {}
+        },
+        Data::Enum(_) => {}
+        Data::Union(_) => {}
     }
 
     let is_default_method = if no_is_default {
