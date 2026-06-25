@@ -26,6 +26,28 @@ struct Config {
 impl Config {
     fn is_default__a(v: &i32) -> bool { v == &Self::default().a }
     fn is_default__e(v: &String) -> bool { v == &Self::default().e }
+    fn is_default(v: &Self) -> bool { v == &Self::default() }
+}
+```
+
+Add `#[smart_is_default(no_is_default)]` or `#[smart_is_default(skip)]` to suppress `is_default`.
+
+```rust
+#[derive(SmartDefault, SmartIsDefault, PartialEq, Debug)]
+#[smart_is_default(no_is_default)]
+struct Item {
+    #[default = 0]
+    count: i32,
+
+    #[smart_is_default(skip)]
+    #[default = 0]
+    skipped: i32,
+}
+
+impl Item {
+    fn is_default(&self) -> bool { // You can now implement your own `is_default`.
+        self.count == 0
+    }
 }
 ```
 

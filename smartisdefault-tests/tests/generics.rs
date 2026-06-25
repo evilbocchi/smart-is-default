@@ -61,3 +61,16 @@ fn generic_is_default_helpers() {
     assert!(!Pair::is_default__first(&q.first));
     assert!(Pair::is_default__second(&q.second));
 }
+
+#[test]
+fn generic_is_default_whole_struct() {
+    assert!(Pair::<i32>::default().is_default());
+
+    let q: Pair<i32> = Pair {
+        first: 5,
+        second: 0,
+    };
+    assert!(!q.is_default());
+
+    assert!(Pair::<String>::default().is_default());
+}

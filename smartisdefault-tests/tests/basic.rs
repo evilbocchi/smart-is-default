@@ -69,3 +69,36 @@ fn smart_default_values_are_as_expected() {
     assert!(def.opt.is_none());
     assert!(def.list.is_empty());
 }
+
+#[test]
+fn is_default_true_for_default_instance() {
+    assert!(Config::default().is_default());
+}
+
+#[test]
+fn is_default_false_for_all_non_default_instance() {
+    assert!(!Config::all_non_default().is_default());
+}
+
+#[test]
+fn is_default_false_when_single_field_differs() {
+    let cfg = Config {
+        a: 99,
+        ..Config::default()
+    };
+    assert!(!cfg.is_default());
+}
+
+#[test]
+fn is_default_true_for_value_equal_to_default() {
+    // A fresh instance with values that compare equal to the smart defaults
+    // (not the same object as `Config::default()`) must still report `true`.
+    let cfg = Config {
+        a: 12,
+        e: "four".to_string(),
+        flag: true,
+        opt: None,
+        list: Vec::new(),
+    };
+    assert!(cfg.is_default());
+}
