@@ -46,11 +46,22 @@ struct FieldInfo {
 ///   `is_default__<field>` helper. In the auto-generated `Serialize` impl
 ///   the field is always emitted (no skip check is performed, since there is
 ///   no helper to consult).
+/// * `#[smart_is_default(no_pub)]`. Emit per-field helpers without
+///   the `pub` qualifier, keeping them private to the module that defines
+///   the type. By default, helpers are `pub` so they can be referenced
+///   from other modules (e.g. in `#[serde(skip_serializing_if = "...")]`
+///   attributes on a separate wrapper type).
 #[proc_macro_derive(SmartIsDefault, attributes(default, smart_is_default))]
 pub fn derive_smart_is_default(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let no_is_default = container_has_flag(&input, "smart_is_default", "no_is_default");
     let serde_skip = container_has_flag(&input, "smart_is_default", "serde");
+    let no_pub = container_has_flag(&input, "smart_is_default", "no_pub");
+    let helper_vis: proc_macro2::TokenStream = if no_pub {
+        quote! {}
+    } else {
+        quote! { pub }
+    };
 
     let name = &input.ident;
     let generics = &input.generics;
@@ -76,7 +87,7 @@ pub fn derive_smart_is_default(input: TokenStream) -> TokenStream {
                         let field_ty = &field.ty;
                         helper_fns.push(quote! {
                             #[allow(non_snake_case)]
-                            fn #fn_name(v: &#field_ty) -> bool {
+                            #helper_vis fn #fn_name(v: &#field_ty) -> bool {
                                 v == &Self::default().#field_name
                             }
                         });
@@ -103,7 +114,7 @@ pub fn derive_smart_is_default(input: TokenStream) -> TokenStream {
                         let index = Index::from(field_index);
                         helper_fns.push(quote! {
                             #[allow(non_snake_case)]
-                            fn #fn_name(v: &#field_ty) -> bool {
+                            #helper_vis fn #fn_name(v: &#field_ty) -> bool {
                                 v == &Self::default().#index
                             }
                         });
